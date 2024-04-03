@@ -7,17 +7,22 @@ import {
   SignOutButton,
   SignedIn,
   SignedOut,
+  useOrganization,
   useSession,
 } from '@clerk/nextjs';
 import { useMutation, useQuery } from 'convex/react';
 import { api } from '../../convex/_generated/api';
 
 export default function Home() {
-  const session = useSession();
+  const { organization } = useOrganization();
+
   // sends data from frontend to back end
   // data must be same as their first shaped
   const createFile = useMutation(api.files.createFile);
-  const files = useQuery(api.files.getFiles);
+  const files = useQuery(
+    api.files.getFiles,
+    organization?.id ? { orgId: organization.id } : 'skip'
+  );
   console.log(`Files`, files);
 
   return (
@@ -36,19 +41,20 @@ export default function Home() {
       {files?.map((file) => {
         return (
           <div key={file._id}>
-            <h1 className="scroll-m-20 text-4xl font-extrabold tracking-tight lg:text-5xl">
+            <h4 className="scroll-m-20 text-xl font-semibold tracking-tight">
               {file.names}
-              {file.age}
-            </h1>
+              {file.orgId}
+            </h4>
           </div>
         );
       })}
 
       <Button
         onClick={(e) => {
+          if (!organization) return;
           createFile({
-            name: 'Hello America!',
-            age: 47,
+            name: 'Hello',
+            orgId: organization?.id,
           });
         }}
         variant="ghost"

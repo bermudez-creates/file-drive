@@ -6,7 +6,7 @@ import { ConvexError, v } from 'convex/values';
 export const createFile = mutation({
   args: {
     name: v.string(),
-    age: v.number(),
+    orgId: v.string(),
   },
   async handler(ctx, args) {
     const identity = await ctx.auth.getUserIdentity();
@@ -16,13 +16,15 @@ export const createFile = mutation({
     console.log('Handler files insert');
     await ctx.db.insert('files_table', {
       names: args.name,
-      age: args.age,
+      orgId: args.orgId,
     });
   },
 });
 
 export const getFiles = query({
-  args: {},
+  args: {
+    orgId: v.string(),
+  },
   async handler(ctx, args) {
     const identity = await ctx.auth.getUserIdentity();
     if (!identity) {
@@ -30,6 +32,9 @@ export const getFiles = query({
     }
     console.log('Handler getting files');
     // return entries stored in this table
-    return ctx.db.query('files_table').collect();
+    return ctx.db
+      .query('files_table')
+      .withIndex('by_orgId', (q) => q.eq('orgId', args.orgId))
+      .collect();
   },
 });
