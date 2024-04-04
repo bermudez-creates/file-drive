@@ -7,4 +7,7 @@ export default defineSchema({
     names: v.string(),
     orgId: v.string(),
   }).index('by_orgId', ['orgId']),
+  users: defineTable({
+    tokenIdentifier: v.string(),
+  }),
 });
