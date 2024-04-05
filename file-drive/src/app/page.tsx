@@ -29,7 +29,7 @@ export default function Home() {
 
   return (
     <main className="flex min-h-screen flex-col items-center justify-center p-24">
-      <SignedIn>
+      {/* <SignedIn>
         <SignOutButton>
           <Button>Sign Out</Button>
         </SignOutButton>
@@ -38,7 +38,7 @@ export default function Home() {
         <SignInButton mode="modal">
           <Button>Sign In</Button>
         </SignInButton>
-      </SignedOut>
+      </SignedOut> */}
 
       {files?.map((file) => {
         return (
