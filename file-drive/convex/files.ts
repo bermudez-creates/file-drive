@@ -14,8 +14,9 @@ export const createFile = mutation({
       throw new ConvexError('You must be logged in');
     }
     console.log('Handler files insert');
+
     await ctx.db.insert('files_table', {
-      names: args.name,
+      name: args.name,
       orgId: args.orgId,
     });
   },
@@ -31,7 +32,8 @@ export const getFiles = query({
     if (!identity) {
       return [];
     }
-    console.log('Handler getting files');
+
+    console.log('Handler getting files', identity.tokenIdentifier);
     // return entries stored in this table
     return ctx.db
       .query('files_table')
