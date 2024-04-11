@@ -33,11 +33,10 @@ export default function Home() {
 
       <Button
         onClick={(e) => {
-          console.log(user);
           if (!orgId) return;
 
           createFile({
-            name: 'Hello',
+            name: 'Testing',
             orgId,
           });
         }}

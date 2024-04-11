@@ -1,6 +1,19 @@
-import { error } from 'console';
-import { mutation, query } from './_generated/server';
+import { MutationCtx, QueryCtx, mutation, query } from './_generated/server';
 import { ConvexError, v } from 'convex/values';
+import { getUser } from './users';
+
+async function hasAccessToOrg(
+  ctx: QueryCtx | MutationCtx,
+  tokenIdentifier: string,
+  orgId: string
+) {
+  const user = await getUser(ctx, tokenIdentifier);
+
+  const hasAccess =
+    user.orgIds.includes(orgId) || user.tokenIdentifier.includes(orgId);
+
+  return hasAccess;
+}
 
 // takes from the frontend and passes it to the backend
 export const createFile = mutation({
@@ -13,7 +26,22 @@ export const createFile = mutation({
     if (!identity) {
       throw new ConvexError('You must be logged in');
     }
-    console.log('Handler files insert');
+    // const user = await getUser(ctx, identity.tokenIdentifier);
+
+    // console.log(`USER in files.ts:`, user);
+    // console.log(`IDENTITY in files.ts:`, identity);
+
+    const hasAccess = await hasAccessToOrg(
+      ctx,
+      identity.tokenIdentifier,
+      args.orgId
+    );
+    console.log(`Has access in files.ts`, hasAccess);
+    if (!hasAccess) {
+      return new ConvexError(
+        'User may be unauthorized to perform this function.'
+      );
+    }
 
     await ctx.db.insert('files_table', {
       name: args.name,
@@ -33,7 +61,17 @@ export const getFiles = query({
       return [];
     }
 
-    console.log('Handler getting files', identity.tokenIdentifier);
+    // initial loadtime results in user being null
+    const hasAccess = await hasAccessToOrg(
+      ctx,
+      identity.tokenIdentifier,
+      args.orgId
+    );
+    console.log(`Has access in files.ts`, hasAccess);
+    if (!hasAccess) {
+      return [];
+    }
+
     // return entries stored in this table
     return ctx.db
       .query('files_table')

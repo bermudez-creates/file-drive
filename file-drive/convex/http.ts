@@ -25,13 +25,13 @@ http.route({
       switch (result.type) {
         case 'user.created':
           await ctx.runMutation(internal.users.createUser, {
-            tokenIdentifier: `https://${process.env.CLERK_HOSTNAME}|${result.data.id}`,
+            tokenIdentifier: `https://enhanced-meerkat-11.clerk.accounts.dev|${result.data.id}`,
           });
           break;
-
+        // on clerk must check subsribed events for http messages to reach convex
         case 'organizationMembership.created':
           await ctx.runMutation(internal.users.orgIdToUser, {
-            tokenIdentifier: `https://${process.env.CLERK_HOSTNAME}|${result.data.public_user_data.user_id}`,
+            tokenIdentifier: `https://enhanced-meerkat-11.clerk.accounts.dev|${result.data.public_user_data.user_id}`,
             orgId: result.data.organization.id,
           });
           break;
