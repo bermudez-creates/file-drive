@@ -14,7 +14,6 @@ async function hasAccessToOrg(
 
   return hasAccess;
 }
-
 // takes from the frontend and passes it to the backend
 export const createFile = mutation({
   args: {
@@ -26,17 +25,13 @@ export const createFile = mutation({
     if (!identity) {
       throw new ConvexError('You must be logged in');
     }
-    // const user = await getUser(ctx, identity.tokenIdentifier);
-
-    // console.log(`USER in files.ts:`, user);
-    // console.log(`IDENTITY in files.ts:`, identity);
 
     const hasAccess = await hasAccessToOrg(
       ctx,
       identity.tokenIdentifier,
       args.orgId
     );
-    console.log(`Has access in files.ts`, hasAccess);
+
     if (!hasAccess) {
       return new ConvexError(
         'User may be unauthorized to perform this function.'
@@ -67,11 +62,10 @@ export const getFiles = query({
       identity.tokenIdentifier,
       args.orgId
     );
-    console.log(`Has access in files.ts`, hasAccess);
+
     if (!hasAccess) {
       return [];
     }
-
     // return entries stored in this table
     return ctx.db
       .query('files_table')
