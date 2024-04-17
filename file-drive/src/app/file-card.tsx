@@ -30,8 +30,13 @@ import {
   AlertDialogTrigger,
 } from '@/components/ui/alert-dialog';
 import { useState } from 'react';
+import { useMutation } from 'convex/react';
+import { api } from '../../convex/_generated/api';
+import { useToast } from '@/components/ui/use-toast';
 
-export function FileCardActions() {
+export function FileCardActions({ file }: { file: Doc<'files_table'> }) {
+  const deleteFile = useMutation(api.files.deleteFile);
+  const { toast } = useToast();
   const [confirmDelete, setConfirmDelete] = useState(false);
   return (
     <>
@@ -46,7 +51,20 @@ export function FileCardActions() {
           </AlertDialogHeader>
           <AlertDialogFooter>
             <AlertDialogCancel>Cancel</AlertDialogCancel>
-            <AlertDialogAction onClick={(event) => {}}>
+            <AlertDialogAction
+              onClick={async () => {
+                await deleteFile({
+                  fileId: file._id,
+                });
+
+                toast({
+                  variant: 'delete',
+                  title: 'File Deleted',
+                  description:
+                    'Your file was successfully removed from the server',
+                });
+              }}
+            >
               {/* TODO: Add delete functionality */}
               Continue
             </AlertDialogAction>
@@ -77,7 +95,7 @@ export function FileCard({ file }: { file: Doc<'files_table'> }) {
       <CardHeader className="relative">
         <CardTitle> {file.name}</CardTitle>
         <div className="absolute top-2 right-2 text-red-300">
-          <FileCardActions />
+          <FileCardActions file={file} />
         </div>
         {/* <CardDescription>Card Description</CardDescription> */}
       </CardHeader>
