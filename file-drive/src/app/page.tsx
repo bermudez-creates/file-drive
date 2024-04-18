@@ -6,6 +6,8 @@ import { api } from '../../convex/_generated/api';
 
 import { UploadButton } from './upload-button';
 import { FileCard } from './file-card';
+import Image from 'next/image';
+import { Loader } from 'lucide-react';
 
 export default function Home() {
   const organization = useOrganization();
@@ -18,18 +20,45 @@ export default function Home() {
   // sends data from frontend to back end
   // data must be same as their first shaped
   const files = useQuery(api.files.getFiles, orgId ? { orgId } : 'skip');
+  const isLoading = files === undefined;
 
   return (
     <main className="container max-auto pt-12">
-      <div className="flex justify-between items-center mb-7">
-        <h1 className="text-4xl font-bold">Files</h1>
-        <UploadButton />
-      </div>
-      <div className="grid grid-cols-4 gap-4">
-        {files?.map((file) => {
-          return <FileCard key={file._id} file={file} />;
-        })}
-      </div>
+      {isLoading && (
+        <div className="flex flex-col gap-8 items-center mt-20">
+          <Loader className="h-30 w-30 animate-spin" />
+          <div className="text-xl">Loading homepage...</div>
+        </div>
+      )}
+
+      {!isLoading && files.length === 0 && (
+        <div className="flex flex-col gap-8 items-center mt-20">
+          <Image
+            alt="Image of a physical file upload."
+            width={300}
+            height={300}
+            src="/empty.svg"
+          />
+          <h2 className="text-2xl font-semibold text-purple-700">
+            No files to display, begin uploading!
+          </h2>
+          <UploadButton />
+        </div>
+      )}
+      {!isLoading && files.length > 0 && (
+        <>
+          <div className="flex justify-between items-center mb-7">
+            <h1 className="text-4xl font-bold">Files</h1>
+            <UploadButton />
+          </div>
+
+          <div className="grid grid-cols-4 gap-4">
+            {files?.map((file) => {
+              return <FileCard key={file._id} file={file} />;
+            })}
+          </div>
+        </>
+      )}
     </main>
   );
 }

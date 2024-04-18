@@ -15,7 +15,13 @@ import {
   DropdownMenuLabel,
   DropdownMenuTrigger,
 } from '@/components/ui/dropdown-menu';
-import { ListX, Trash2Icon } from 'lucide-react';
+import {
+  FileTextIcon,
+  GanttChartIcon,
+  ImageIcon,
+  ListX,
+  Trash2Icon,
+} from 'lucide-react';
 import { DropdownMenuItem } from '@radix-ui/react-dropdown-menu';
 
 import {
@@ -29,10 +35,11 @@ import {
   AlertDialogTitle,
   AlertDialogTrigger,
 } from '@/components/ui/alert-dialog';
-import { useState } from 'react';
+import { ReactNode, useState } from 'react';
 import { useMutation } from 'convex/react';
 import { api } from '../../convex/_generated/api';
 import { useToast } from '@/components/ui/use-toast';
+import Image from 'next/image';
 
 export function FileCardActions({ file }: { file: Doc<'files_table'> }) {
   const deleteFile = useMutation(api.files.deleteFile);
@@ -65,7 +72,6 @@ export function FileCardActions({ file }: { file: Doc<'files_table'> }) {
                 });
               }}
             >
-              {/* TODO: Add delete functionality */}
               Continue
             </AlertDialogAction>
           </AlertDialogFooter>
@@ -89,18 +95,36 @@ export function FileCardActions({ file }: { file: Doc<'files_table'> }) {
   );
 }
 
+// function getFileUrl(fileId: <Doc>"files_table">["_id"]): string {
+
+// }
+
 export function FileCard({ file }: { file: Doc<'files_table'> }) {
+  const typeIcons = {
+    image: <ImageIcon />,
+    pdf: <FileTextIcon />,
+    csv: <GanttChartIcon />,
+  } as Record<Doc<'files_table'>['type'], ReactNode>;
+
   return (
     <Card>
       <CardHeader className="relative">
-        <CardTitle> {file.name}</CardTitle>
+        <CardTitle className="flex gap-2">
+          <div className="flex justify-center">
+            {' '}
+            <p>{typeIcons[file.type]}</p>
+          </div>
+          {file.name}
+        </CardTitle>
         <div className="absolute top-2 right-2 text-red-300">
           <FileCardActions file={file} />
         </div>
         {/* <CardDescription>Card Description</CardDescription> */}
       </CardHeader>
       <CardContent>
-        <p>Card Content</p>
+        {file.type === 'image' && (
+          <Image alt={file.name} width={200} height={200} src="" />
+        )}
       </CardContent>
       <CardFooter>
         <Button>Download</Button>
