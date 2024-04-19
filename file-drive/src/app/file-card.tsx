@@ -6,7 +6,7 @@ import {
   CardHeader,
   CardTitle,
 } from '@/components/ui/card';
-import { Doc } from '../../convex/_generated/dataModel';
+import { Doc, Id } from '../../convex/_generated/dataModel';
 import { Button } from '@/components/ui/button';
 
 import {
@@ -95,9 +95,12 @@ export function FileCardActions({ file }: { file: Doc<'files_table'> }) {
   );
 }
 
-// function getFileUrl(fileId: <Doc>"files_table">["_id"]): string {
-
-// }
+function getFileUrl(fileId: Id<'_storage'>): string {
+  return `${process.env.NEXT_PUBLIC_CONVEX_URL}/api/storage/${fileId}`;
+  // return value returns storage id instead of actual link to URL image like below value:
+  // return `https://animated-mastiff-177.convex.cloud/api/storage/849e2b2c-92df-4d4a-ad01-f987eaa94979`;
+  //
+}
 
 export function FileCard({ file }: { file: Doc<'files_table'> }) {
   const typeIcons = {
@@ -123,7 +126,12 @@ export function FileCard({ file }: { file: Doc<'files_table'> }) {
       </CardHeader>
       <CardContent>
         {file.type === 'image' && (
-          <Image alt={file.name} width={200} height={200} src="" />
+          <Image
+            alt={file.name}
+            width={200}
+            height={200}
+            src={getFileUrl(file.fileId)}
+          />
         )}
       </CardContent>
       <CardFooter>

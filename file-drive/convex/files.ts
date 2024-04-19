@@ -98,16 +98,18 @@ export const deleteFile = mutation({
       throw new ConvexError('You must be logged in');
     }
 
-    const file = ctx.db.get(args.fileId);
+    // file value is a promise, .then() returns values from database why file.orgId throws error
+    const file = ctx.db.get(args.fileId).then((res) => console.log(res));
 
     if (!file) {
       throw new ConvexError('File may not exist');
     }
+
     // Prevents function on Convex from updating
     // const hasAccess = await hasAccessToOrg(
     //   ctx,
     //   identity.tokenIdentifier,
-    //   file.orgId
+
     // );
     // console.log(hasAccess);
 
