@@ -3,6 +3,22 @@ import { ConvexError, v } from 'convex/values';
 import { getUser } from './users';
 import { fileTypes } from './schema';
 
+export const filesWithUrl = query({
+  args: {},
+  handler: async (ctx) => {
+    const messages = await ctx.db.query('files_table').collect();
+    return Promise.all(
+      messages.map(async (message) => ({
+        ...message,
+        // If the message is an "image" its `body` is an `Id<"_storage">`
+        ...(message.type === 'image'
+          ? { url: await ctx.storage.getUrl(message.fileId) }
+          : {}),
+      }))
+    );
+  },
+});
+
 export const generateUploadUrl = mutation(async (ctx) => {
   const identity = await ctx.auth.getUserIdentity();
 

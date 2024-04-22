@@ -95,11 +95,14 @@ export function FileCardActions({ file }: { file: Doc<'files_table'> }) {
   );
 }
 
+// function Image({ message }: { message: { url: string } }) {
+//   return <img src={message.url} height="300px" width="auto" />;
+// }
+
 function getFileUrl(fileId: Id<'_storage'>): string {
   return `${process.env.NEXT_PUBLIC_CONVEX_URL}/api/storage/${fileId}`;
   // return value returns storage id instead of actual link to URL image like below value:
   // return `https://animated-mastiff-177.convex.cloud/api/storage/849e2b2c-92df-4d4a-ad01-f987eaa94979`;
-  //
 }
 
 export function FileCard({ file }: { file: Doc<'files_table'> }) {
@@ -124,7 +127,7 @@ export function FileCard({ file }: { file: Doc<'files_table'> }) {
         </div>
         {/* <CardDescription>Card Description</CardDescription> */}
       </CardHeader>
-      <CardContent>
+      <CardContent className="h-[200px] flex justify-center items-center">
         {file.type === 'image' && (
           <Image
             alt={file.name}
@@ -133,9 +136,18 @@ export function FileCard({ file }: { file: Doc<'files_table'> }) {
             src={getFileUrl(file.fileId)}
           />
         )}
+
+        {file.type === 'csv' && <GanttChartIcon className="w-20 h-20" />}
+        {file.type === 'pdf' && <FileTextIcon className="w-20 h-20" />}
       </CardContent>
-      <CardFooter>
-        <Button>Download</Button>
+      <CardFooter className="flex justify-center">
+        <Button
+          onClick={() => {
+            window.open(getFileUrl(file.fileId), '_blank');
+          }}
+        >
+          Download
+        </Button>
       </CardFooter>
     </Card>
   );
