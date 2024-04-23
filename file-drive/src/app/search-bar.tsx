@@ -59,6 +59,7 @@ export function SearchBar({
           />
 
           <Button
+            size="sm"
             type="submit"
             disabled={form.formState.isSubmitting}
             className="flex gap-1"

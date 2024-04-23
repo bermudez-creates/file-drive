@@ -7,9 +7,11 @@ import { api } from '../../convex/_generated/api';
 import { UploadButton } from './upload-button';
 import { FileCard } from './file-card';
 import Image from 'next/image';
-import { Loader } from 'lucide-react';
+import { FileIcon, Loader, StarIcon } from 'lucide-react';
 import { SearchBar } from './search-bar';
 import { useState } from 'react';
+import { Button } from '@/components/ui/button';
+import Link from 'next/link';
 
 function Placeholder() {
   return (
@@ -44,30 +46,47 @@ export default function Home() {
 
   return (
     <main className="container max-auto pt-12">
-      {isLoading && (
-        <div className="flex flex-col gap-8 items-center mt-20">
-          <Loader className="h-30 w-30 animate-spin" />
-          <div className="text-xl">Loading homepage...</div>
+      <div className="flex gap-8">
+        <div className="w-40 flex flex-col gap-4">
+          <Link href="/dashboard/files">
+            <Button variant="link" className="flex gap-2">
+              <FileIcon /> All Files
+            </Button>
+          </Link>
+
+          <Link href="/dashboard/favorites">
+            <Button variant="link" className="flex gap-2">
+              <StarIcon /> Your Favorites
+            </Button>
+          </Link>
         </div>
-      )}
+        <div className="w-full">
+          {isLoading && (
+            <div className="flex flex-col gap-8 items-center mt-20">
+              <Loader className="h-30 w-30 animate-spin" />
+              <div className="text-xl">Loading homepage...</div>
+            </div>
+          )}
 
-      {!isLoading && (
-        <>
-          <div className="flex justify-between items-center mb-7">
-            <h1 className="text-4xl font-bold">Files</h1>
-            <SearchBar query={query} setQuery={setQuery} />
-            <UploadButton />
-          </div>
+          {!isLoading && (
+            <>
+              <div className="flex justify-between items-center mb-7">
+                <h1 className="text-4xl font-bold">Files</h1>
+                <SearchBar query={query} setQuery={setQuery} />
+                <UploadButton />
+              </div>
 
-          {files.length === 0 && <Placeholder />}
+              {files.length === 0 && <Placeholder />}
 
-          <div className="grid grid-cols-3 gap-4">
-            {files?.map((file) => {
-              return <FileCard key={file._id} file={file} />;
-            })}
-          </div>
-        </>
-      )}
+              <div className="grid grid-cols-3 gap-4">
+                {files?.map((file) => {
+                  return <FileCard key={file._id} file={file} />;
+                })}
+              </div>
+            </>
+          )}
+        </div>
+      </div>
     </main>
   );
 }
