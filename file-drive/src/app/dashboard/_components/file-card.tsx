@@ -14,12 +14,14 @@ import {
   DropdownMenuContent,
   DropdownMenuLabel,
   DropdownMenuTrigger,
+  DropdownMenuSeparator,
 } from '@/components/ui/dropdown-menu';
 import {
   FileTextIcon,
   GanttChartIcon,
   ImageIcon,
-  ListX,
+  List,
+  StarsIcon,
   Trash2Icon,
 } from 'lucide-react';
 import { DropdownMenuItem } from '@radix-ui/react-dropdown-menu';
@@ -80,9 +82,16 @@ export function FileCardActions({ file }: { file: Doc<'files_table'> }) {
 
       <DropdownMenu>
         <DropdownMenuTrigger>
-          <ListX />
+          <List />
         </DropdownMenuTrigger>
         <DropdownMenuContent>
+          <DropdownMenuItem
+            onClick={() => {}}
+            className="flex gap-1 text-blue-500 items-center cursor-pointer"
+          >
+            <StarsIcon className="w-4 h-4" /> Add to favorites
+          </DropdownMenuItem>
+          <DropdownMenuSeparator />
           <DropdownMenuItem
             onClick={() => setConfirmDelete(true)}
             className="flex gap-1 text-red-500 items-center cursor-pointer"
