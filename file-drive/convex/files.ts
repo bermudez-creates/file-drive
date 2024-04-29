@@ -126,8 +126,44 @@ export const deleteFile = mutation({
     }
 
     // file value is a promise, .then() returns values from database why file.orgId throws error
-    const file = ctx.db.get(args.fileId).then((res) => console.log(res));
+    const file = ctx.db.get(args.fileId).then((res) => {
+      return res;
+    });
+    await file;
 
+    console.log(args.fileId);
+    if (!file) {
+      throw new ConvexError('File may not exist');
+    }
+
+    // Prevents function on Convex from updating
+    // const hasAccess = await hasAccessToOrg(
+    //   ctx,
+    //   ,
+
+    // );
+    // console.log(hasAccess);
+
+    // if (!hasAccess) {
+    //   return new ConvexError('User does not have access to delete this file.');
+    // }
+
+    await ctx.db.delete(args.fileId);
+  },
+});
+
+export const toggleFavorite = mutation({
+  args: { fileId: v.id('files_table') },
+  async handler(ctx, args) {
+    const identity = await ctx.auth.getUserIdentity();
+
+    if (!identity) {
+      throw new ConvexError('You must be logged in');
+    }
+
+    // file value is a promise, .then() returns values from database why file.orgId throws error
+    const file = ctx.db.get(args.fileId).then((res) => console.log(res));
+    console.log(file);
     if (!file) {
       throw new ConvexError('File may not exist');
     }
@@ -143,7 +179,20 @@ export const deleteFile = mutation({
     // if (!hasAccess) {
     //   return new ConvexError('User does not have access to delete this file.');
     // }
+    const user = await ctx.db
+      .query('users')
+      .withIndex('by_tokenIdentifier', (q) =>
+        q.eq('tokenIdentifier', identity.tokenIdentifier)
+      )
+      .first();
 
-    await ctx.db.delete(args.fileId);
+    if (!user) {
+      return new ConvexError('User does not exist.');
+    }
+
+    const favorite = await ctx.db
+      .query('favorites')
+      .withIndex('by_userId_org_Id_file_Id', (q) => q.eq('userId', user._id))
+      .first();
   },
 });
