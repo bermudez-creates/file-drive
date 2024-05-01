@@ -2,6 +2,7 @@ import { MutationCtx, QueryCtx, mutation, query } from './_generated/server';
 import { ConvexError, v } from 'convex/values';
 import { getUser } from './users';
 import { fileTypes } from './schema';
+import { Doc, Id } from './_generated/dataModel';
 
 export const filesWithUrl = query({
   args: {},
@@ -29,17 +30,35 @@ export const generateUploadUrl = mutation(async (ctx) => {
   return await ctx.storage.generateUploadUrl();
 });
 
-async function hasAccessToOrg(
+export async function hasAccessToOrg(
   ctx: QueryCtx | MutationCtx,
-  tokenIdentifier: string,
+
   orgId: string
 ) {
-  const user = await getUser(ctx, tokenIdentifier);
+  const identity = await ctx.auth.getUserIdentity();
 
-  const hasAccess =
-    user.orgIds.includes(orgId) || user.tokenIdentifier.includes(orgId);
+  if (!identity) {
+    return null;
+  }
 
-  return hasAccess;
+  const user = await ctx.db
+    .query('users')
+    .withIndex('by_tokenIdentifier', (q) =>
+      q.eq('tokenIdentifier', identity.tokenIdentifier)
+    )
+    .first();
+
+  if (!user) {
+    return null;
+  }
+
+  const hasAccess = user.tokenIdentifier.includes(orgId);
+
+  if (!hasAccess) {
+    return null;
+  }
+
+  return { user };
 }
 // takes from the frontend and passes it to the backend
 export const createFile = mutation({
@@ -57,7 +76,7 @@ export const createFile = mutation({
 
     const hasAccess = await hasAccessToOrg(
       ctx,
-      identity.tokenIdentifier,
+
       args.orgId
     );
 
@@ -91,7 +110,7 @@ export const getFiles = query({
     // initial loadtime results in user being null
     const hasAccess = await hasAccessToOrg(
       ctx,
-      identity.tokenIdentifier,
+
       args.orgId
     );
 
@@ -126,10 +145,10 @@ export const deleteFile = mutation({
     }
 
     // file value is a promise, .then() returns values from database why file.orgId throws error
-    const file = ctx.db.get(args.fileId).then((res) => {
-      return res;
-    });
-    await file;
+    const file = ctx.db.get(args.fileId);
+    console.log(`File promise`, file);
+    const res = file.then((x) => {});
+    console.log(`Response`, res);
 
     console.log(args.fileId);
     if (!file) {
@@ -155,44 +174,50 @@ export const deleteFile = mutation({
 export const toggleFavorite = mutation({
   args: { fileId: v.id('files_table') },
   async handler(ctx, args) {
-    const identity = await ctx.auth.getUserIdentity();
+    const access = await hasAccessToFile(ctx, args.fileId);
 
-    if (!identity) {
-      throw new ConvexError('You must be logged in');
-    }
-
-    // file value is a promise, .then() returns values from database why file.orgId throws error
-    const file = ctx.db.get(args.fileId).then((res) => console.log(res));
-    console.log(file);
-    if (!file) {
-      throw new ConvexError('File may not exist');
-    }
-
-    // Prevents function on Convex from updating
-    // const hasAccess = await hasAccessToOrg(
-    //   ctx,
-    //   identity.tokenIdentifier,
-
-    // );
-    // console.log(hasAccess);
-
-    // if (!hasAccess) {
-    //   return new ConvexError('User does not have access to delete this file.');
-    // }
-    const user = await ctx.db
-      .query('users')
-      .withIndex('by_tokenIdentifier', (q) =>
-        q.eq('tokenIdentifier', identity.tokenIdentifier)
-      )
-      .first();
-
-    if (!user) {
-      return new ConvexError('User does not exist.');
+    if (!access) {
+      throw new ConvexError('no access to file');
     }
 
     const favorite = await ctx.db
       .query('favorites')
-      .withIndex('by_userId_org_Id_file_Id', (q) => q.eq('userId', user._id))
+      .withIndex('by_userId_org_Id_file_Id', (q) =>
+        q
+          .eq('userId', access.user._id)
+          .eq('orgId', access.file.orgId)
+          .eq('fileId', access.file._id)
+      )
       .first();
+
+    if (!favorite) {
+      await ctx.db.insert('favorites', {
+        fileId: access.file._id,
+        userId: access.user._id,
+        orgId: access.file.orgId,
+      });
+    } else {
+      await ctx.db.delete(favorite._id);
+    }
   },
 });
+
+async function hasAccessToFile(
+  ctx: QueryCtx | MutationCtx,
+  fileId: Id<'files_table'>
+) {
+  // file value is a promise, .then() returns values from database why file.orgId throws error
+  const file = await ctx.db.get(fileId);
+
+  if (!file) {
+    return null;
+  }
+
+  const hasAccess = await hasAccessToOrg(ctx, file.orgId);
+
+  if (!hasAccess) {
+    return null;
+  }
+
+  return { user: hasAccess.user, file };
+}

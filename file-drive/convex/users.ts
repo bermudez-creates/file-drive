@@ -1,6 +1,6 @@
 import { ConvexError, v } from 'convex/values';
-
 import { MutationCtx, QueryCtx, internalMutation } from './_generated/server';
+import { hasAccessToOrg } from './files';
 
 export async function getUser(
   ctx: QueryCtx | MutationCtx,
@@ -40,3 +40,22 @@ export const orgIdToUser = internalMutation({
     });
   },
 });
+
+// export const getMe = query({
+//   args: {},
+//   async handler(ctx) {
+//     const identity = await ctx.auth.getUserIdentity();
+
+//     if (!identity) {
+//       return null;
+//     }
+
+//     const user = await getUser(ctx, identity.tokenIdentifier);
+
+//     if (!user) {
+//       return null;
+//     }
+
+//     return user;
+//   },
+// });
