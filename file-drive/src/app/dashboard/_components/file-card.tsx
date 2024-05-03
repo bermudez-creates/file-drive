@@ -43,7 +43,13 @@ import { api } from '../../../../convex/_generated/api';
 import { useToast } from '@/components/ui/use-toast';
 import Image from 'next/image';
 
-export function FileCardActions({ file }: { file: Doc<'files_table'> }) {
+export function FileCardActions({
+  file,
+  isFavorited,
+}: {
+  file: Doc<'files_table'>;
+  isFavorited: boolean;
+}) {
   const deleteFile = useMutation(api.files.deleteFile);
   const toggleFavorite = useMutation(api.files.toggleFavorite);
   const { toast } = useToast();
@@ -100,7 +106,16 @@ export function FileCardActions({ file }: { file: Doc<'files_table'> }) {
             }}
             className="flex gap-1 text-blue-500 items-center cursor-pointer"
           >
-            <StarsIcon className="w-4 h-4" /> Add to favorites
+            {isFavorited ? (
+              <div className="flex gap-1 text-green-500 items-center cursor-pointer">
+                <StarsIcon className="w-4 h-4 text-green-500 " /> Remove from
+                favorites
+              </div>
+            ) : (
+              <div className="flex gap-1 items-center cursor-pointer">
+                <StarsIcon className="w-4 h-4" /> Add to favorites
+              </div>
+            )}
           </DropdownMenuItem>
           <DropdownMenuSeparator />
           <DropdownMenuItem
@@ -127,9 +142,12 @@ function getFileUrl(fileId: Id<'_storage'>): string {
 
 export function FileCard({
   file,
+  favorites,
 }: {
-  file: Doc<'files_table'> & { isFavorited: boolean; url: string | null };
+  file: Doc<'files_table'>;
+  favorites: Doc<'favorites'>[];
 }) {
+  // & { isFavorited: boolean; url: string | null };
   // const userProfile = useQuery(api.files.getUserProfile), {
   //   userId: file.userId,
   // });
@@ -139,6 +157,10 @@ export function FileCard({
     pdf: <FileTextIcon />,
     csv: <GanttChartIcon />,
   } as Record<Doc<'files_table'>['type'], ReactNode>;
+
+  const isFavorited = favorites.some(
+    (favorite) => favorite.fileId === file._id
+  );
 
   return (
     <Card>
@@ -151,13 +173,18 @@ export function FileCard({
           {file.name}
         </CardTitle>
         <div className="absolute top-2 right-2 text-red-300">
-          <FileCardActions file={file} />
+          <FileCardActions isFavorited={isFavorited} file={file} />
         </div>
         {/* <CardDescription>Card Description</CardDescription> */}
       </CardHeader>
       <CardContent className="h-[200px] flex justify-center items-center">
-        {file.type === 'image' && file.url && (
-          <Image alt={file.name} width="300" height="300" src={file.url} />
+        {file.type === 'image' && (
+          <Image
+            alt={file.name}
+            width={300}
+            height={300}
+            src={getFileUrl(file.fileId)}
+          />
         )}
 
         {file.type === 'csv' && <GanttChartIcon className="w-20 h-20" />}
