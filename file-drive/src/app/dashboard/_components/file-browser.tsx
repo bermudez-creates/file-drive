@@ -18,8 +18,8 @@ function Placeholder() {
     <div className="flex flex-col gap-8 items-center mt-20">
       <Image
         alt="Image of a physical file upload."
-        width={300}
-        height={300}
+        width="300"
+        height="300"
         src="/empty.svg"
       />
       <h2 className="text-2xl font-semibold text-purple-700">
@@ -30,7 +30,13 @@ function Placeholder() {
   );
 }
 
-export default function FilesBrowser({ title }: { title: string }) {
+export default function FilesBrowser({
+  title,
+  favorites,
+}: {
+  title: string;
+  favorites?: boolean;
+}) {
   const organization = useOrganization();
   const user = useUser();
   const [query, setQuery] = useState('');
@@ -41,7 +47,10 @@ export default function FilesBrowser({ title }: { title: string }) {
   }
   // sends data from frontend to back end
   // data must be same as their first shaped
-  const files = useQuery(api.files.getFiles, orgId ? { orgId, query } : 'skip');
+  const files = useQuery(
+    api.files.getFiles,
+    orgId ? { orgId, query, favorites } : 'skip'
+  );
   const isLoading = files === undefined;
 
   return (

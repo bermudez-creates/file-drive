@@ -38,13 +38,14 @@ import {
   AlertDialogTrigger,
 } from '@/components/ui/alert-dialog';
 import { ReactNode, useState } from 'react';
-import { useMutation } from 'convex/react';
+import { useMutation, useQuery } from 'convex/react';
 import { api } from '../../../../convex/_generated/api';
 import { useToast } from '@/components/ui/use-toast';
 import Image from 'next/image';
 
 export function FileCardActions({ file }: { file: Doc<'files_table'> }) {
   const deleteFile = useMutation(api.files.deleteFile);
+  const toggleFavorite = useMutation(api.files.toggleFavorite);
   const { toast } = useToast();
   const [confirmDelete, setConfirmDelete] = useState(false);
   return (
@@ -86,7 +87,17 @@ export function FileCardActions({ file }: { file: Doc<'files_table'> }) {
         </DropdownMenuTrigger>
         <DropdownMenuContent>
           <DropdownMenuItem
-            onClick={() => {}}
+            onClick={() => {
+              toggleFavorite({
+                fileId: file._id,
+              });
+
+              toast({
+                variant: 'success',
+                title: 'Toggled favorites',
+                description: 'File was added or removed from your favorites',
+              });
+            }}
             className="flex gap-1 text-blue-500 items-center cursor-pointer"
           >
             <StarsIcon className="w-4 h-4" /> Add to favorites
@@ -114,7 +125,15 @@ function getFileUrl(fileId: Id<'_storage'>): string {
   // return `https://animated-mastiff-177.convex.cloud/api/storage/849e2b2c-92df-4d4a-ad01-f987eaa94979`;
 }
 
-export function FileCard({ file }: { file: Doc<'files_table'> }) {
+export function FileCard({
+  file,
+}: {
+  file: Doc<'files_table'> & { isFavorited: boolean; url: string | null };
+}) {
+  // const userProfile = useQuery(api.files.getUserProfile), {
+  //   userId: file.userId,
+  // });
+
   const typeIcons = {
     image: <ImageIcon />,
     pdf: <FileTextIcon />,
@@ -137,13 +156,8 @@ export function FileCard({ file }: { file: Doc<'files_table'> }) {
         {/* <CardDescription>Card Description</CardDescription> */}
       </CardHeader>
       <CardContent className="h-[200px] flex justify-center items-center">
-        {file.type === 'image' && (
-          <Image
-            alt={file.name}
-            width={200}
-            height={200}
-            src={getFileUrl(file.fileId)}
-          />
+        {file.type === 'image' && file.url && (
+          <Image alt={file.name} width="300" height="300" src={file.url} />
         )}
 
         {file.type === 'csv' && <GanttChartIcon className="w-20 h-20" />}

@@ -4,22 +4,6 @@ import { getUser } from './users';
 import { fileTypes } from './schema';
 import { Doc, Id } from './_generated/dataModel';
 
-export const filesWithUrl = query({
-  args: {},
-  handler: async (ctx) => {
-    const messages = await ctx.db.query('files_table').collect();
-    return Promise.all(
-      messages.map(async (message) => ({
-        ...message,
-        // If the message is an "image" its `body` is an `Id<"_storage">`
-        ...(message.type === 'image'
-          ? { url: await ctx.storage.getUrl(message.fileId) }
-          : {}),
-      }))
-    );
-  },
-});
-
 export const generateUploadUrl = mutation(async (ctx) => {
   const identity = await ctx.auth.getUserIdentity();
 
@@ -99,6 +83,7 @@ export const getFiles = query({
   args: {
     orgId: v.string(),
     query: v.optional(v.string()),
+    favorites: v.optional(v.boolean()),
   },
   async handler(ctx, args) {
     const identity = await ctx.auth.getUserIdentity();
@@ -118,7 +103,7 @@ export const getFiles = query({
       return [];
     }
     // return entries stored in this table
-    const files = await ctx.db
+    let files = await ctx.db
       .query('files_table')
       .withIndex('by_orgId', (q) => q.eq('orgId', args.orgId))
       .collect();
@@ -126,47 +111,57 @@ export const getFiles = query({
     const query = args.query;
 
     if (query) {
-      return files.filter((file) =>
+      files = files.filter((file) =>
         file.name.toLocaleLowerCase().includes(query.toLocaleLowerCase())
       );
-    } else {
-      return files;
     }
+
+    if (args.favorites) {
+      const user = await ctx.db
+        .query('users')
+        .withIndex('by_tokenIdentifier', (q) =>
+          q.eq('tokenIdentifier', identity.tokenIdentifier)
+        )
+        .first();
+
+      if (!user) {
+        return files;
+      }
+
+      const favorites = await ctx.db
+        .query('favorites')
+        .withIndex('by_userId_org_Id_file_Id', (q) =>
+          q.eq('userId', user._id).eq('orgId', args.orgId)
+        )
+        .collect();
+
+      files = files.filter((file) =>
+        favorites.some((favorite) => favorite.fileId === file._id)
+      );
+    }
+
+    return files;
+
+    // const filesWithUrl = await Promise.all(
+    //   files.map(async (file) => ({
+    //     ...file,
+    //     url: await ctx.storage.getUrl(file.fileId),
+    //   }))
+    // );
+
+    // return filesWithUrl;
   },
 });
 
 export const deleteFile = mutation({
   args: { fileId: v.id('files_table') },
   async handler(ctx, args) {
-    const identity = await ctx.auth.getUserIdentity();
+    const access = await hasAccessToFile(ctx, args.fileId);
 
-    if (!identity) {
-      throw new ConvexError('You must be logged in');
+    if (!access) {
+      throw new ConvexError('no access to file');
     }
-
-    // file value is a promise, .then() returns values from database why file.orgId throws error
-    const file = ctx.db.get(args.fileId);
-    console.log(`File promise`, file);
-    const res = file.then((x) => {});
-    console.log(`Response`, res);
-
-    console.log(args.fileId);
-    if (!file) {
-      throw new ConvexError('File may not exist');
-    }
-
-    // Prevents function on Convex from updating
-    // const hasAccess = await hasAccessToOrg(
-    //   ctx,
-    //   ,
-
-    // );
-    // console.log(hasAccess);
-
-    // if (!hasAccess) {
-    //   return new ConvexError('User does not have access to delete this file.');
-    // }
-
+    console.log('Deleting');
     await ctx.db.delete(args.fileId);
   },
 });
@@ -189,7 +184,7 @@ export const toggleFavorite = mutation({
           .eq('fileId', access.file._id)
       )
       .first();
-
+    console.log('Favoriting');
     if (!favorite) {
       await ctx.db.insert('favorites', {
         fileId: access.file._id,
@@ -206,14 +201,14 @@ async function hasAccessToFile(
   ctx: QueryCtx | MutationCtx,
   fileId: Id<'files_table'>
 ) {
-  // file value is a promise, .then() returns values from database why file.orgId throws error
   const file = await ctx.db.get(fileId);
-
+  console.log(`Getting file:`, file);
   if (!file) {
     return null;
   }
 
   const hasAccess = await hasAccessToOrg(ctx, file.orgId);
+  console.log(`Has access:`, hasAccess);
 
   if (!hasAccess) {
     return null;
