@@ -6,6 +6,7 @@ import {
   query,
 } from './_generated/server';
 import { hasAccessToOrg } from './files';
+import { roles } from './schema';
 
 export async function getUser(
   ctx: QueryCtx | MutationCtx,
@@ -36,12 +37,31 @@ export const createUser = internalMutation({
 });
 
 export const orgIdToUser = internalMutation({
-  args: { tokenIdentifier: v.string(), orgId: v.string() },
+  args: { tokenIdentifier: v.string(), orgId: v.string(), role: roles },
   async handler(ctx, args) {
     const user = await getUser(ctx, args.tokenIdentifier);
 
     await ctx.db.patch(user._id, {
-      orgIds: [...user.orgIds, args.orgId],
+      orgIds: [...user.orgIds, { orgId: args.orgId, role: args.role }],
+    });
+  },
+});
+
+export const updateRoleInOrgForUser = internalMutation({
+  args: { tokenIdentifier: v.string(), orgId: v.string(), role: roles },
+  async handler(ctx, args) {
+    const user = await getUser(ctx, args.tokenIdentifier);
+
+    const org = user.orgIds.find((org) => org.orgId === args.orgId);
+
+    if (!org) {
+      throw new ConvexError('Expected organization but none were found');
+    }
+
+    org.role = args.role;
+
+    await ctx.db.patch(user._id, {
+      orgIds: user.orgIds,
     });
   },
 });

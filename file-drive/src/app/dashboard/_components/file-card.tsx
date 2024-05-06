@@ -25,6 +25,7 @@ import {
   Trash2Icon,
 } from 'lucide-react';
 import { DropdownMenuItem } from '@radix-ui/react-dropdown-menu';
+import { Protect } from '@clerk/nextjs';
 
 import {
   AlertDialog,
@@ -117,6 +118,8 @@ export function FileCardActions({
               </div>
             )}
           </DropdownMenuItem>
+
+          {/* <Protect role="org:admin" fallback={<></>}> */}
           <DropdownMenuSeparator />
           <DropdownMenuItem
             onClick={() => setConfirmDelete(true)}
@@ -124,6 +127,7 @@ export function FileCardActions({
           >
             <Trash2Icon className="w-4 h-4" /> Delete
           </DropdownMenuItem>
+          {/* </Protect> */}
         </DropdownMenuContent>
       </DropdownMenu>
     </>
