@@ -62,8 +62,9 @@ export function FileCardActions({
           <AlertDialogHeader>
             <AlertDialogTitle>Are you absolutely sure?</AlertDialogTitle>
             <AlertDialogDescription>
-              This action cannot be undone. This will permanently delete your
-              file and remove the data from our servers.
+              This action will mark this file to be deleted. This will place
+              your file in the trashcan you can retrieve the file or remove the
+              data from our servers.
             </AlertDialogDescription>
           </AlertDialogHeader>
           <AlertDialogFooter>
@@ -76,9 +77,9 @@ export function FileCardActions({
 
                 toast({
                   variant: 'delete',
-                  title: 'File Deleted',
+                  title: 'File In Trashcan',
                   description:
-                    'Your file was successfully removed from the server',
+                    'Your file was successfully placed in the trashccan',
                 });
               }}
             >
@@ -119,15 +120,15 @@ export function FileCardActions({
             )}
           </DropdownMenuItem>
 
-          {/* <Protect role="org:admin" fallback={<></>}> */}
-          <DropdownMenuSeparator />
-          <DropdownMenuItem
-            onClick={() => setConfirmDelete(true)}
-            className="flex gap-1 text-red-500 items-center cursor-pointer"
-          >
-            <Trash2Icon className="w-4 h-4" /> Delete
-          </DropdownMenuItem>
-          {/* </Protect> */}
+          <Protect role="org:admin" fallback={<></>}>
+            <DropdownMenuSeparator />
+            <DropdownMenuItem
+              onClick={() => setConfirmDelete(true)}
+              className="flex gap-1 text-red-500 items-center cursor-pointer"
+            >
+              <Trash2Icon className="w-4 h-4" /> Delete
+            </DropdownMenuItem>
+          </Protect>
         </DropdownMenuContent>
       </DropdownMenu>
     </>
@@ -185,8 +186,8 @@ export function FileCard({
         {file.type === 'image' && (
           <Image
             alt={file.name}
-            width={300}
-            height={300}
+            width={200}
+            height={200}
             src={getFileUrl(file.fileId)}
           />
         )}
