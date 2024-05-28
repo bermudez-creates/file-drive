@@ -23,6 +23,7 @@ import {
   List,
   StarsIcon,
   Trash2Icon,
+  Undo2Icon,
 } from 'lucide-react';
 import { DropdownMenuItem } from '@radix-ui/react-dropdown-menu';
 import { Protect } from '@clerk/nextjs';
@@ -52,6 +53,7 @@ export function FileCardActions({
   isFavorited: boolean;
 }) {
   const deleteFile = useMutation(api.files.deleteFile);
+  const restoreFile = useMutation(api.files.restoreFile);
   const toggleFavorite = useMutation(api.files.toggleFavorite);
   const { toast } = useToast();
   const [confirmDelete, setConfirmDelete] = useState(false);
@@ -123,10 +125,26 @@ export function FileCardActions({
           <Protect role="org:admin" fallback={<></>}>
             <DropdownMenuSeparator />
             <DropdownMenuItem
-              onClick={() => setConfirmDelete(true)}
-              className="flex gap-1 text-red-500 items-center cursor-pointer"
+              onClick={() => {
+                if (file.shouldDelete) {
+                  restoreFile({
+                    fileId: file._id,
+                  });
+                } else {
+                  setConfirmDelete(true);
+                }
+              }}
+              className="flex gap-1 items-center cursor-pointer"
             >
-              <Trash2Icon className="w-4 h-4" /> Delete
+              {file.shouldDelete ? (
+                <div className="flex gap-1 text-green-500 items-center cursor-pointer">
+                  <Undo2Icon className="w-4 h-4" /> Restore
+                </div>
+              ) : (
+                <div className="flex gap-1 text-red-500 items-center cursor-pointer">
+                  <Trash2Icon className="w-4 h-4" /> Delete
+                </div>
+              )}
             </DropdownMenuItem>
           </Protect>
         </DropdownMenuContent>

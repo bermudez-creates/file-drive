@@ -1,4 +1,10 @@
-import { MutationCtx, QueryCtx, mutation, query } from './_generated/server';
+import {
+  MutationCtx,
+  QueryCtx,
+  internalMutation,
+  mutation,
+  query,
+} from './_generated/server';
 import { ConvexError, v } from 'convex/values';
 import { getUser } from './users';
 import { fileTypes } from './schema';
@@ -130,6 +136,23 @@ export const getFiles = query({
   },
 });
 
+export const removeFiles = internalMutation({
+  args: {},
+  async handler(ctx) {
+    const files = await ctx.db
+      .query('files_table')
+      .withIndex('by_shouldDelete', (q) => q.eq('shouldDelete', true))
+      .collect();
+
+    await Promise.all(
+      files.map(async (file) => {
+        await ctx.storage.delete(file.fileId);
+        return await ctx.db.delete(file._id);
+      })
+    );
+  },
+});
+
 export const deleteFile = mutation({
   args: { fileId: v.id('files_table') },
   async handler(ctx, args) {
@@ -149,6 +172,29 @@ export const deleteFile = mutation({
     }
     await ctx.db.patch(args.fileId, {
       shouldDelete: true,
+    });
+  },
+});
+
+export const restoreFile = mutation({
+  args: { fileId: v.id('files_table') },
+  async handler(ctx, args) {
+    const access = await hasAccessToFile(ctx, args.fileId);
+
+    if (!access) {
+      throw new ConvexError('no access to file');
+    }
+    console.log('Deleting');
+
+    const isAdmin =
+      access.user.orgIds.find((org) => org.orgId === access.file.orgId)
+        ?.role === 'admin';
+
+    if (!isAdmin) {
+      throw new ConvexError('Permission denied');
+    }
+    await ctx.db.patch(args.fileId, {
+      shouldDelete: false,
     });
   },
 });
