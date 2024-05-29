@@ -9,6 +9,9 @@ import {
 import { Doc, Id } from '../../../../convex/_generated/dataModel';
 import { Button } from '@/components/ui/button';
 
+import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
+import { format, formatDistance, formatRelative, subDays } from 'date-fns';
+
 import {
   DropdownMenu,
   DropdownMenuContent,
@@ -17,6 +20,7 @@ import {
   DropdownMenuSeparator,
 } from '@/components/ui/dropdown-menu';
 import {
+  FileIcon,
   FileTextIcon,
   GanttChartIcon,
   ImageIcon,
@@ -122,6 +126,15 @@ export function FileCardActions({
             )}
           </DropdownMenuItem>
 
+          <DropdownMenuItem
+            onClick={() => {
+              window.open(getFileUrl(file.fileId), '_blank');
+            }}
+            className="flex gap-1 text-blue-500 items-center cursor-pointer"
+          >
+            <FileIcon className="w-4 h-4" /> Download
+          </DropdownMenuItem>
+
           <Protect role="org:admin" fallback={<></>}>
             <DropdownMenuSeparator />
             <DropdownMenuItem
@@ -171,9 +184,9 @@ export function FileCard({
   favorites: Doc<'favorites'>[];
 }) {
   // & { isFavorited: boolean; url: string | null };
-  // const userProfile = useQuery(api.files.getUserProfile), {
-  //   userId: file.userId,
-  // });
+  const userProfile = useQuery(api.users.getUserProfile, {
+    userId: file.userId,
+  });
 
   const typeIcons = {
     image: <ImageIcon />,
@@ -213,14 +226,17 @@ export function FileCard({
         {file.type === 'csv' && <GanttChartIcon className="w-20 h-20" />}
         {file.type === 'pdf' && <FileTextIcon className="w-20 h-20" />}
       </CardContent>
-      <CardFooter className="flex justify-center">
-        <Button
-          onClick={() => {
-            window.open(getFileUrl(file.fileId), '_blank');
-          }}
-        >
-          Download
-        </Button>
+      <CardFooter className="flex justify-between">
+        <div className="flex gap-2 text-xs text-gray-500 w-40 items-center">
+          <Avatar className="w-6 h-6">
+            <AvatarImage src={userProfile?.image} />
+            <AvatarFallback>CN</AvatarFallback>
+          </Avatar>
+          {userProfile?.name}
+        </div>
+        <div className="text-xs text-gray-600">
+          Uploaded on {formatRelative(new Date(file._creationTime), new Date())}
+        </div>
       </CardFooter>
     </Card>
   );
