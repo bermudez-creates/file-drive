@@ -39,7 +39,7 @@ export function SideNav() {
             'text-indigo-400': pathname.includes('/dashboard/trash'),
           })}
         >
-          <Trash2 /> Trashcan
+          <Trash2 /> Trash
         </Button>
       </Link>
     </div>

@@ -5,14 +5,20 @@ import {
   SignedOut,
   UserButton,
 } from '@clerk/nextjs';
+import Image from 'next/image';
+import Link from 'next/link';
 
 export function Header() {
   return (
     <div className="border-b p-4 bg-purple-400">
       <div className="items-center container mx-auto justify-between flex mt-2">
-        <h2 className="scroll-m-20 border-b pb-2 text-3xl font-semibold tracking-tight first:mt-0">
+        <Link href={'/'} className="flex gap-2 items-center text-xl">
+          <Image src="/logo.png" width={50} height={50} alt="logo" />
           FileDrive
-        </h2>
+        </Link>
+        <Button variant={'ghost'}>
+          <Link href={'/dashboard/files'}>Your Files</Link>
+        </Button>
         <div className="flex gap-2">
           <OrganizationSwitcher />
           <UserButton />

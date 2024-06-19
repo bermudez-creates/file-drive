@@ -102,6 +102,15 @@ export function FileCardActions({
         <DropdownMenuContent>
           <DropdownMenuItem
             onClick={() => {
+              window.open(getFileUrl(file.fileId), '_blank');
+            }}
+            className="flex gap-1 text-blue-500 items-center cursor-pointer"
+          >
+            <FileIcon className="w-4 h-4" /> Download
+          </DropdownMenuItem>
+
+          <DropdownMenuItem
+            onClick={() => {
               toggleFavorite({
                 fileId: file._id,
               });
@@ -124,15 +133,6 @@ export function FileCardActions({
                 <StarsIcon className="w-4 h-4" /> Add to favorites
               </div>
             )}
-          </DropdownMenuItem>
-
-          <DropdownMenuItem
-            onClick={() => {
-              window.open(getFileUrl(file.fileId), '_blank');
-            }}
-            className="flex gap-1 text-blue-500 items-center cursor-pointer"
-          >
-            <FileIcon className="w-4 h-4" /> Download
           </DropdownMenuItem>
 
           <Protect role="org:admin" fallback={<></>}>
@@ -201,7 +201,7 @@ export function FileCard({
   return (
     <Card>
       <CardHeader className="relative">
-        <CardTitle className="flex gap-2">
+        <CardTitle className="flex gap-2 text-base font-normal">
           <div className="flex justify-center">
             {' '}
             <p>{typeIcons[file.type]}</p>
